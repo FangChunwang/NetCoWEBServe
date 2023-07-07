@@ -18,7 +18,7 @@ namespace netco
         ~TimeWheel();
         void fresh(TcpConnectionSlot::ptr slot);
         void loopFunc();
-
+        int getInterval() { return m_interval; }
     private:
         int bucket_count;
         int m_interval; // 时间间隔

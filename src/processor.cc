@@ -11,8 +11,14 @@ using namespace netco;
 
 __thread int threadIdx = -1;
 
+/**
+ * @brief Construct a new Processor:: Processor object
+ * 该构造函数会初始化mainCtx_
+ * @param tid 处理器唯一标识
+ */
 Processor::Processor(int tid)
-	: tid_(tid), status_(PRO_STOPPED), pLoop_(nullptr), runningNewQue_(0), pCurCoroutine_(nullptr), mainCtx_(0), m_timeWheel(6, 10)
+	: tid_(tid), status_(PRO_STOPPED), pLoop_(nullptr), runningNewQue_(0),
+	 pCurCoroutine_(nullptr), mainCtx_(0), m_timeWheel(6, 10000)
 {
 	mainCtx_.makeCurContext();
 }
@@ -108,7 +114,7 @@ bool Processor::loop()
 			printf("开始运行时间轮的loopfunc\r\n");
 			m_timeWheel.loopFunc();
 			printf("设置在10s后开始运行时间轮\r\n");
-			wait(Time(10000));
+			wait(Time(this->m_timeWheel.getInterval()));
 		}
 	};
 	// 时间轮的初始化在处理器创建时已经完成

@@ -1,6 +1,4 @@
-//@Author Liu Yukang
 #pragma once
-
 #include "utils.h"
 #include "parameter.h"
 #include "../include/http_conn.h"
@@ -13,12 +11,6 @@
 struct tcp_info;
 namespace netco
 {
-
-	// Socket�࣬������Socket����Ĭ�϶��Ƿ�������
-	// ְ��
-	// 1���ṩfd���������API
-	// 2������fd����������
-	// ���������ü�������ĳһfdû�����˾ͻ�close
 	class Socket
 	{
 	public:

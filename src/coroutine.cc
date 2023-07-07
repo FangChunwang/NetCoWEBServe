@@ -47,7 +47,10 @@ void Coroutine::resume()
 		break;
 	}
 }
-
+/**
+ * @brief 放弃CPU的执行权
+ * 但是此函数只是将协程的状态设置为CO_WAITING
+ */
 void Coroutine::yield()
 {
 	status_ = CO_WAITING;

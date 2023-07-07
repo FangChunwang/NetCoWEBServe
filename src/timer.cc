@@ -60,12 +60,18 @@ void Timer::runAt(Time time, Coroutine* pCo)
 {
 	timerCoHeap_.push(std::move(std::pair<Time, Coroutine*>(time, pCo)));
 	if (timerCoHeap_.top().first == time)
-	{//新加入的任务是最紧急的任务则需要更改timefd所设置的时间
+	{
 		resetTimeOfTimefd(time);
 	}
 }
 
-//给timefd重新设置时间，time是绝对时间
+/**
+ * @brief 閲嶆柊璁剧疆璁℃椂鍣ㄧ殑璁℃椂鏃堕棿
+ * 
+ * @param time 
+ * @return true 
+ * @return false 
+ */
 bool Timer::resetTimeOfTimefd(Time time)
 {
 	struct itimerspec newValue;
@@ -77,6 +83,12 @@ bool Timer::resetTimeOfTimefd(Time time)
 	return ret < 0 ? false : true;
 }
 
+/**
+ * @brief 璁剧疆鍗忕▼鍦ㄥ闀挎椂闂村悗鎵ц
+ * 
+ * @param time 寤舵椂鏃堕棿锛屽崟浣峬s
+ * @param pCo 寤舵椂鍗忕▼
+ */
 void Timer::runAfter(Time time, Coroutine* pCo)
 {
 	Time runTime(Time::now().getTimeVal() + time.getTimeVal());

@@ -2,6 +2,12 @@
 
 using namespace netco;
 
+/**
+ * @brief Construct a new Time Wheel:: Time Wheel object
+ * 
+ * @param num 时间轮的凹槽数
+ * @param interval 间隔时间
+ */
 TimeWheel::TimeWheel(int num, int interval)
 {
     bucket_count = num;
@@ -13,7 +19,10 @@ TimeWheel::TimeWheel(int num, int interval)
         m_wheel.push(tmp);
     }
 }
-
+/**
+ * @brief Destroy the Time Wheel:: Time Wheel object
+ * 该函数没有做任何事情
+ */
 TimeWheel::~TimeWheel()
 {
 }

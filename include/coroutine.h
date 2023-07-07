@@ -1,4 +1,3 @@
-//@author Liu Yukang
 #pragma once
 #include <functional>
 #include "context.h"
@@ -26,10 +25,8 @@ namespace netco
 
 		DISALLOW_COPY_MOVE_AND_ASSIGN(Coroutine);
 
-		// 恢复运行
 		void resume();
 
-		// 放弃CPU的执行权
 		void yield();
 
 		Processor *getMyProcessor() { return pMyProcessor_; }
