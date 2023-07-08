@@ -12,6 +12,8 @@
 struct tcp_info;
 namespace netco
 {
+	class Processor;
+	class Coroutine;
 	class Socket
 	{
 	public:
@@ -105,8 +107,16 @@ namespace netco
 
 		http_conn *getHttpConnect() { return m_http_conn; }
 
+		void refresh();
+		Coroutine *getCoroutine() { return coroutine; }
+		void setCoroutine(Coroutine *co);
+
+		void setWeakSlotPtr(std::shared_ptr<AbstractSlot<Socket>> ptr) { m_weak_slot = ptr; }
+
 	private:
 		Socket accept_raw();
+		Coroutine *coroutine{nullptr};
+
 		// fd
 		int _sockfd;
 		int *_pRef;
@@ -117,5 +127,7 @@ namespace netco
 
 		http_conn *m_http_conn;
 		bool stop{false};
+
+		std::weak_ptr<netco::AbstractSlot<Socket>> m_weak_slot;
 	};
 }

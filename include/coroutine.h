@@ -1,7 +1,9 @@
 #pragma once
 #include <functional>
+#include <memory>
 #include "context.h"
 #include "utils.h"
+#include "abstractSlot.h"
 
 namespace netco
 {
@@ -38,6 +40,8 @@ namespace netco
 		Context *getCtx() { return &ctx_; }
 
 		Socket *getSocket() { return clientSocket; }
+
+		void bindSocketToCoroutine(Coroutine *co);
 
 	private:
 		std::function<void()> coFunc_;

@@ -7,6 +7,7 @@
 #include "./include/socket.h"
 #include "./include/mutex.h"
 #include "./include/http_conn.h"
+#include "./include/abstractSlot.h"
 
 using namespace netco;
 

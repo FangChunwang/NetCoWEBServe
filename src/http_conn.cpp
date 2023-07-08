@@ -190,8 +190,7 @@ bool http_conn::read_once(int fd)
             over_http = true;
             return false;
         }
-        if (fd == 9)
-            printf("没有资源可以读取，将之挂到epoll上\r\n");
+
         netco::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(fd, EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLHUP);
 
         return read_once(fd);

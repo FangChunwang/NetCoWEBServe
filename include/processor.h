@@ -74,6 +74,7 @@ namespace netco
 		void registerToTimeWheel();
 
 		TimeWheel *getTimeWheel() { return m_timeWheel; }
+		void refresh(TimeWheel::TcpConnectionSlot::ptr ptrTemp);
 
 	private:
 		// 恢复运行一个协程

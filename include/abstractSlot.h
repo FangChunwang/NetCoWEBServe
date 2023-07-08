@@ -3,8 +3,6 @@
 #include <functional>
 #include <sys/socket.h>
 #include <cstdio>
-#include "spinlock.h"
-#include "socket.h"
 
 namespace netco
 {
@@ -32,6 +30,5 @@ namespace netco
 
     private:
         T *m_socket;
-        Spinlock spinLock;
     };
 }

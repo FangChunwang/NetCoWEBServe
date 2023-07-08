@@ -6,6 +6,12 @@
 
 using namespace netco;
 
+/**
+ * @brief
+ *
+ * @param pP
+ * @param co  传入协程对象的this指针
+ */
 static void coWrapFunc(Processor *pP, Coroutine *co)
 {
 	if (co->getSocket() != nullptr)
@@ -13,16 +19,25 @@ static void coWrapFunc(Processor *pP, Coroutine *co)
 		std::shared_ptr<Socket> socketRep = std::make_shared<Socket>(co->getSocket()->fd(), co->getSocket()->ip(), co->getSocket()->port());
 		TimeWheel::TcpConnectionSlot::ptr tmp = std::make_shared<AbstractSlot<Socket>>(co->getSocket());
 		// printf("use_count：%d\r\n", tmp.use_count());
-		// co->getSocket()->m_weak_slot = tmp;
+		co->getSocket()->setWeakSlotPtr(tmp);
 		// printf("coWrapFunc_0: use_count：%d\r\n", tmp.use_count());
 		pP->getTimeWheel()->fresh(tmp);
 		// printf("coWrapFunc_1: use_count：%d\r\n", tmp.use_count());
 	}
+
+	co->bindSocketToCoroutine(co);
 	// if (co->getSocket() != nullptr)
 	//  printf("coWrapFunc_2: use_count：%d\r\n", co->getSocket()->m_weak_slot.use_count());
 	pP->getCurRunningCo()->startFunc();
 
 	pP->killCurCo();
+}
+void Coroutine::bindSocketToCoroutine(Coroutine *co)
+{
+	if (clientSocket != nullptr)
+	{
+		clientSocket->setCoroutine(co);
+	}
 }
 
 Coroutine::Coroutine(Processor *pMyProcessor, Socket *socket, size_t stackSize, std::function<void()> &&func)

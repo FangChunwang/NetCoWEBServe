@@ -18,7 +18,7 @@ __thread int threadIdx = -1;
  */
 Processor::Processor(int tid)
 	: tid_(tid), status_(PRO_STOPPED), pLoop_(nullptr), runningNewQue_(0),
-	  pCurCoroutine_(nullptr), mainCtx_(0), m_timeWheel(new TimeWheel(6, 1000))
+	  pCurCoroutine_(nullptr), mainCtx_(0), m_timeWheel(new TimeWheel(6, 10000))
 {
 	mainCtx_.makeCurContext();
 }
@@ -253,4 +253,9 @@ void Processor::goNewCo(std::function<void()> &coFunc, Socket *socket, size_t st
 void Processor::killCurCo()
 {
 	removedCo_.push_back(pCurCoroutine_);
+}
+
+void Processor::refresh(TimeWheel::TcpConnectionSlot::ptr ptrTemp)
+{
+	getTimeWheel()->fresh(ptrTemp);
 }

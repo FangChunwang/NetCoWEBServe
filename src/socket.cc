@@ -1,7 +1,8 @@
 #include "../include/socket.h"
 #include "../include/scheduler.h"
 #include "../include/http_conn.h"
-
+#include "../include/coroutine.h"
+#include "../include/abstractSlot.h"
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -248,7 +249,14 @@ void Socket::run_woke()
 
 			if (m_http_conn->read_once(_sockfd))
 			{
-				m_http_conn->improv = 1;
+				// 在此处刷新时间轮
+				if (getCoroutine() != nullptr)
+				{
+					printf("%d接收到数据，更新时间轮\r\n", _sockfd);
+					Coroutine *tempPtr = getCoroutine();
+					TimeWheel::TcpConnectionSlot::ptr tmp = m_weak_slot.lock();
+					tempPtr->getMyProcessor()->refresh(tmp);
+				}
 				// printf("我要开始执行process了\r\n");
 				m_http_conn->process(_sockfd);
 			}
@@ -284,5 +292,13 @@ void Socket::run_woke()
 				break;
 			}
 		}
+	}
+}
+
+void Socket::setCoroutine(Coroutine *co)
+{
+	if (coroutine == nullptr)
+	{
+		coroutine = co;
 	}
 }
