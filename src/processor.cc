@@ -18,7 +18,7 @@ __thread int threadIdx = -1;
  */
 Processor::Processor(int tid)
 	: tid_(tid), status_(PRO_STOPPED), pLoop_(nullptr), runningNewQue_(0),
-	  pCurCoroutine_(nullptr), mainCtx_(0), m_timeWheel(new TimeWheel(6, 10000))
+	  pCurCoroutine_(nullptr), mainCtx_(0), m_timeWheel(new TimeWheel(6, 5000))
 {
 	mainCtx_.makeCurContext();
 }
@@ -122,7 +122,7 @@ bool Processor::loop()
 		}
 	};
 	// 时间轮的初始化在处理器创建时已经完成
-	goNewCo(timeWheelLoop, nullptr, parameter::coroutineStackSize);
+	// goNewCo(timeWheelLoop, nullptr, parameter::coroutineStackSize);
 
 	pLoop_ = new std::thread(
 		[this]

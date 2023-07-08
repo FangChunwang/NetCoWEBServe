@@ -76,7 +76,7 @@ namespace netco
 	{
 		(static_cast<T *>(obj))->~T();
 		_memPool.FreeAMemBlock(obj);
-		std::cout << "已将工作池的内存归还到内存池" << std::endl;
+		//std::cout << "已将工作池的内存归还到内存池" << std::endl;
 	}
 
 }

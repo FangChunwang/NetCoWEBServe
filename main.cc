@@ -40,7 +40,7 @@ void single_acceptor_server_test()
 			while (1)
 			{
 				netco::Socket *conn = new netco::Socket(listener.accept());
-				printf("新建立的连接的文字描述符是%d: \r\n", conn->fd());
+				// printf("新建立的连接的文字描述符是%d: \r\n", conn->fd());
 				conn->setTcpNoDelay(true);
 
 				netco::co_go(
@@ -52,6 +52,7 @@ void single_acceptor_server_test()
 						{
 							delete conn;
 						}
+						close(conn->fd());
 					},
 					conn);
 			}

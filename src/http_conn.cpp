@@ -564,9 +564,9 @@ bool http_conn::process_write(HTTP_CODE ret)
     }
     case DIRECTORY_RESOURCE:
     {
-        printf("开始将目录数据写入\r\n");
+        //printf("开始将目录数据写入\r\n");
         int ret = write_directory(200, ok_200_title, get_file_type(".html"));
-        printf("目录数据写入的结果是:%d\r\n", ret);
+        //printf("目录数据写入的结果是:%d\r\n", ret);
         m_iv[0].iov_base = m_write_buf;
         m_iv[0].iov_len = m_write_idx;
         m_iv[1].iov_base = m_write_directory_buf;

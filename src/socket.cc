@@ -280,6 +280,8 @@ void Socket::run_woke()
 			if (m_http_conn->write(_sockfd)) // 回应客户端成功，继续等待写事件到来
 			{
 				// shutdown(_sockfd, SHUT_RDWR);
+				// 测试用
+				break;
 				m_http_conn->m_state = 0;
 				// printf("%d是长连接，数据发送已经完成，继续读取数据\r\n", _sockfd);
 			}
