@@ -30,11 +30,11 @@ TimeWheel::~TimeWheel()
 void TimeWheel::loopFunc()
 {
     // DebugLog << "pop src bucket";
-    if (!m_wheel.front().empty())
-    {
-        printf("loopFunc: 连接数目:%d\r\n", m_wheel.front().size());
-        printf("loopFunc: use_count:%d\r\n", m_wheel.front()[0].use_count());
-    }
+    // if (!m_wheel.front().empty())
+    // {
+    //     // printf("loopFunc: 连接数目:%d\r\n", m_wheel.front().size());
+    //     // printf("loopFunc: use_count:%d\r\n", m_wheel.front()[0].use_count());
+    // }
 
     m_wheel.pop();
     std::vector<TcpConnectionSlot::ptr> tmp;
@@ -46,5 +46,5 @@ void TimeWheel::fresh(TcpConnectionSlot::ptr slot)
 {
     // DebugLog << "fresh connection";
     m_wheel.back().emplace_back(slot);
-    printf("use_count:%d\r\n", slot.use_count());
+    // printf("use_count:%d\r\n", slot.use_count());
 }

@@ -84,7 +84,7 @@ int Socket::bind(int port)
 	serv.sin_family = AF_INET;
 	serv.sin_port = htons(port);
 	serv.sin_addr.s_addr = htonl(INADDR_ANY);
-	std::cout << htonl(INADDR_ANY) << std::endl;
+	// std::cout << htonl(INADDR_ANY) << std::endl;
 	int ret = ::bind(_sockfd, (struct sockaddr *)&serv, sizeof(serv));
 	return ret;
 }
@@ -252,7 +252,7 @@ void Socket::run_woke()
 				// 在此处刷新时间轮
 				if (getCoroutine() != nullptr)
 				{
-					printf("%d接收到数据，更新时间轮\r\n", _sockfd);
+					// printf("%d接收到数据，更新时间轮\r\n", _sockfd);
 					Coroutine *tempPtr = getCoroutine();
 					TimeWheel::TcpConnectionSlot::ptr tmp = m_weak_slot.lock();
 					tempPtr->getMyProcessor()->refresh(tmp);
@@ -266,15 +266,13 @@ void Socket::run_woke()
 				{
 					if (stop == false)
 					{
-						printf("关闭%d\r\n", _sockfd);
+						// printf("关闭%d\r\n", _sockfd);
 						stop = true;
 						close(_sockfd);
 					}
 
 					break;
 				}
-				// m_http_conn->improv = 1;
-				// m_http_conn->timer_flag = 1;
 			}
 		}
 		else
@@ -283,12 +281,11 @@ void Socket::run_woke()
 			{
 				// shutdown(_sockfd, SHUT_RDWR);
 				m_http_conn->m_state = 0;
-				printf("%d是长连接，数据发送已经完成，继续读取数据\r\n", _sockfd);
-				// m_http_conn->improv = 1;
+				// printf("%d是长连接，数据发送已经完成，继续读取数据\r\n", _sockfd);
 			}
 			else
 			{
-				printf("%d不是长连接，数据发送已经完成，关闭套接字\r\n", _sockfd);
+				// printf("%d不是长连接，数据发送已经完成，关闭套接字\r\n", _sockfd);
 				break;
 			}
 		}

@@ -18,71 +18,6 @@ const char *error_404_form = "The requested file was not found on this server.\n
 const char *error_500_title = "Internal Error";
 const char *error_500_form = "There was an unusual problem serving the request file.\n";
 
-locker m_lock;
-std::map<std::string, std::string> users;
-
-// 对文件描述符设置非阻塞
-int setnonblocking(int fd)
-{
-    int old_option = fcntl(fd, F_GETFL);
-    int new_option = old_option | O_NONBLOCK;
-    fcntl(fd, F_SETFL, new_option);
-    return old_option;
-}
-
-// 将内核事件表注册读事件，ET模式，选择开启EPOLLONESHOT
-void addfd(int epollfd, int fd, bool one_shot, int TRIGMode)
-{
-    epoll_event event;
-    event.data.fd = fd;
-
-    if (1 == TRIGMode)
-        event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
-    else
-        event.events = EPOLLIN | EPOLLRDHUP;
-
-    if (one_shot)
-        event.events |= EPOLLONESHOT;
-    epoll_ctl(epollfd, EPOLL_CTL_ADD, fd, &event);
-    setnonblocking(fd);
-}
-
-// 从内核时间表删除描述符
-void removefd(int epollfd, int fd)
-{
-    epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, 0);
-    close(fd);
-}
-
-// 将事件重置为EPOLLONESHOT
-void modfd(int epollfd, int fd, int ev, int TRIGMode)
-{
-    epoll_event event;
-    event.data.fd = fd;
-
-    if (1 == TRIGMode)
-        event.events = ev | EPOLLET | EPOLLONESHOT | EPOLLRDHUP;
-    else
-        event.events = ev | EPOLLONESHOT | EPOLLRDHUP;
-
-    epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
-}
-
-int http_conn::m_user_count = 0;
-int http_conn::m_epollfd = -1;
-
-// 关闭连接，关闭一个连接，客户总量减一
-void http_conn::close_conn(bool real_close)
-{
-    if (real_close && (m_sockfd != -1))
-    {
-        // printf("close %d\n", m_sockfd);
-        removefd(m_epollfd, m_sockfd);
-        m_sockfd = -1;
-        m_user_count--;
-    }
-}
-
 // 初始化新接受的连接
 // check_state默认为分析请求行状态
 void http_conn::init()
@@ -100,10 +35,7 @@ void http_conn::init()
     m_checked_idx = 0;
     m_read_idx = 0;
     m_write_idx = 0;
-    cgi = 0;
     m_state = 0;
-    timer_flag = 0;
-    improv = 0;
     m_write_directory_idx = 0;
     memset(m_read_buf, '\0', READ_BUFFER_SIZE);
     memset(m_write_buf, '\0', WRITE_BUFFER_SIZE);
@@ -111,8 +43,11 @@ void http_conn::init()
     m_real_file = nullptr;
 }
 
-// 从状态机，用于分析出一行内容
-// 返回值为行的读取状态，有LINE_OK,LINE_BAD,LINE_OPEN
+/**
+ * @brief 从状态机，用于分析出一行内容
+ *
+ * @return http_conn::LINE_STATUS 返回值为行的读取状态，有LINE_OK,LINE_BAD,LINE_OPEN
+ */
 http_conn::LINE_STATUS http_conn::parse_line()
 {
     char temp;
@@ -144,20 +79,14 @@ http_conn::LINE_STATUS http_conn::parse_line()
     }
     return LINE_OPEN;
 }
-// ssize_t Socket::read(void* buf, size_t count)
-// {
-// 	auto ret = ::read(_sockfd, buf, count);
-// 	if (ret >= 0){
-// 		return ret;
-// 	}
-// 	if(ret == -1 && errno == EINTR){
-// 		return read(buf, count);
-// 	}
-// 	netco::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(_sockfd, EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLHUP);
-// 	return ::read(_sockfd, buf, count);
-// }
-// 循环读取客户数据，直到无数据可读或对方关闭连接
-// 非阻塞ET工作模式下，需要一次性将数据读完
+
+/**
+ * @brief 读取数据，如果没有数据可读则挂到epoll上并让出CPU
+ *
+ * @param fd
+ * @return true
+ * @return false
+ */
 bool http_conn::read_once(int fd)
 {
     // printf("我要执行read_once了\r\n");
@@ -167,57 +96,38 @@ bool http_conn::read_once(int fd)
     }
     int bytes_read = 0;
 
-    //  LT读取数据
-    if (0 == m_TRIGMode)
+    // printf("开始读取数据\r\n");
+    //  bytes_read = recv(m_sockfd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx, 0);
+    bytes_read = ::read(fd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx);
+    // perror("error:");
+    if (bytes_read > 0) // 成功读到数据
     {
-        // printf("开始读取数据\r\n");
-        //  bytes_read = recv(m_sockfd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx, 0);
-        bytes_read = ::read(fd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx);
-        // perror("error:");
-        if (bytes_read > 0) // 成功读到数据
-        {
-            m_read_idx += bytes_read;
-            return true;
-        }
-        else if (bytes_read == -1 && errno == EINTR)
-        {
-            // printf("我读取到了-1个字节,且错误码是EINTR\r\n");
-            return read_once(fd);
-        }
-        else if (bytes_read == 0) // 读到0的时候就可以结束本协程了
-        {
-            // printf("over...\r\n");
-            over_http = true;
-            return false;
-        }
-
-        netco::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(fd, EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLHUP);
-
-        return read_once(fd);
-    }
-    // ET读数据
-    else
-    {
-        while (true)
-        {
-            bytes_read = recv(m_sockfd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx, 0);
-            if (bytes_read == -1)
-            {
-                if (errno == EAGAIN || errno == EWOULDBLOCK)
-                    break;
-                return false;
-            }
-            else if (bytes_read == 0)
-            {
-                return false;
-            }
-            m_read_idx += bytes_read;
-        }
+        m_read_idx += bytes_read;
         return true;
     }
+    else if (bytes_read == -1 && errno == EINTR)
+    {
+        // printf("我读取到了-1个字节,且错误码是EINTR\r\n");
+        return read_once(fd);
+    }
+    else if (bytes_read == 0) // 读到0的时候就可以结束本协程了
+    {
+        // printf("over...\r\n");
+        over_http = true;
+        return false;
+    }
+
+    netco::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(fd, EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLHUP);
+
+    return read_once(fd);
 }
 
-// 解析http请求行，获得请求方法，目标url及http版本号
+/**
+ * @brief 解析http请求行，获得请求方法，目标url及http版本号
+ *
+ * @param text
+ * @return http_conn::HTTP_CODE
+ */
 http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
 {
     // printf("我正在解析请求行\r\n");
@@ -235,7 +145,6 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
     else if (strcasecmp(method, "POST") == 0)
     {
         m_method = POST;
-        cgi = 1;
     }
     else
         return BAD_REQUEST;
@@ -279,7 +188,12 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
     return NO_REQUEST;
 }
 
-// 解析http请求的一个头部信息
+/**
+ * @brief 解析http请求的一个头部信息
+ *
+ * @param text
+ * @return http_conn::HTTP_CODE
+ */
 http_conn::HTTP_CODE http_conn::parse_headers(char *text)
 {
 
@@ -320,19 +234,29 @@ http_conn::HTTP_CODE http_conn::parse_headers(char *text)
     return NO_REQUEST;
 }
 
-// 判断http请求是否被完整读入
+/**
+ * @brief 判断http请求是否被完整读入
+ *
+ * @param text
+ * @return http_conn::HTTP_CODE
+ */
 http_conn::HTTP_CODE http_conn::parse_content(char *text)
 {
     if (m_read_idx >= (m_content_length + m_checked_idx))
     {
         text[m_content_length] = '\0';
-        // POST请求中最后为输入的用户名和密码
         m_string = text;
         return GET_REQUEST;
     }
     return NO_REQUEST;
 }
 
+/**
+ * @brief 处理读取的数据
+ *
+ * @param cfd
+ * @return http_conn::HTTP_CODE
+ */
 http_conn::HTTP_CODE http_conn::process_read(int cfd)
 {
     LINE_STATUS line_status = LINE_OK;
@@ -662,7 +586,7 @@ bool http_conn::process_write(HTTP_CODE ret)
 }
 void http_conn::process(int cfd)
 {
-    printf("我要开始执行process_read了\r\n");
+    // printf("我要开始执行process_read了\r\n");
     HTTP_CODE read_ret = process_read(cfd);
     if (read_ret == NO_REQUEST) // 请求不完整需要继续读取客户数据
     {
@@ -670,7 +594,7 @@ void http_conn::process(int cfd)
         // modfd(m_epollfd, m_sockfd, EPOLLIN, m_TRIGMode);
         return;
     }
-    printf("process_read的结果是:%d\r\n", read_ret);
+    // printf("process_read的结果是:%d\r\n", read_ret);
     bool write_ret = process_write(read_ret);
 
     // 写缓冲区内的内容已经注入完毕，接下来进入写状态
@@ -767,7 +691,7 @@ bool http_conn::write_dir(const char *dirname)
     int i, ret;
     int len = 0;
     // 拼一个html页面<table></table>
-    printf("检索的目录是%s\r\n", dirname);
+    // printf("检索的目录是%s\r\n", dirname);
     len = sprintf(m_write_directory_buf + m_write_directory_idx, "<html><head><title>directory: %s</title></head>", dirname);
     if (len < 0)
     {
@@ -790,8 +714,8 @@ bool http_conn::write_dir(const char *dirname)
     // 目录项二级指针
     struct dirent **ptr;
     int num = scandir(dirname, &ptr, NULL, alphasort);
-    printf("检索到的目录中的文件有%d个\r\n", num);
-    // 遍历
+    // printf("检索到的目录中的文件有%d个\r\n", num);
+    //  遍历
     for (i = 0; i < num; ++i)
     {
 

@@ -117,7 +117,7 @@ bool Processor::loop()
 		{
 			// printf("开始运行时间轮的loopfunc\r\n");
 			m_timeWheel->loopFunc();
-			printf("时间轮转动一次\r\n");
+			// printf("时间轮转动一次\r\n");
 			wait(Time(this->m_timeWheel->getInterval()));
 		}
 	};
@@ -127,7 +127,7 @@ bool Processor::loop()
 	pLoop_ = new std::thread(
 		[this]
 		{
-			printf("this is a new thread\r\n");
+			// printf("this is a new thread\r\n");
 			threadIdx = tid_;
 			status_ = PRO_RUNNING;
 			while (PRO_RUNNING == status_)
@@ -187,7 +187,6 @@ bool Processor::loop()
 						SpinlockGuard lock(coPoolLock_);
 						coPool_.delete_obj(deadCo);
 					}
-					printf("处理器%d还剩余有%ld个连接\r\n", tid_, getCoCnt());
 				}
 				removedCo_.clear();
 			}
@@ -226,7 +225,6 @@ void Processor::wakeUpEpoller()
 void Processor::goNewCo(std::function<void()> &&coFunc, Socket *socket, size_t stackSize)
 {
 	// Coroutine* pCo = new Coroutine(this, stackSize, std::move(coFunc));
-	printf("处理器%d有%ld个连接\r\n", tid_, getCoCnt() + 1);
 	Coroutine *pCo = nullptr;
 
 	{

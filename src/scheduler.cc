@@ -28,7 +28,7 @@ Scheduler::~Scheduler()
 bool Scheduler::startScheduler(int threadCnt)
 {
 	// printf("接下来将创建%d个处理器对象\r\n", threadCnt - 2);
-	for (int i = 0; i < threadCnt - 3; ++i)
+	for (int i = 0; i < threadCnt; ++i)
 	{
 		processors_.emplace_back(new Processor(i));
 		// printf("已经完成第%d个处理器对象的创建\r\n", i);

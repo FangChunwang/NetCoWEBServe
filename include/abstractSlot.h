@@ -22,9 +22,9 @@ namespace netco
         {
             if (m_socket != nullptr)
             {
-                printf("调用shutdown函数\r\n");
+                // printf("调用shutdown函数\r\n");
                 shutdown(m_socket->fd(), SHUT_RDWR);
-                printf("调用shutdown函数成功\r\n");
+                // printf("调用shutdown函数成功\r\n");
             }
         }
 

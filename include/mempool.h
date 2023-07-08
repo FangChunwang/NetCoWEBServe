@@ -56,8 +56,6 @@ namespace netco
 			_mallocListHead = mallocNode->next;
 			free(static_cast<void *>(mallocNode));
 		}
-		std::cout << "The time of _mallocTimes��" << _mallocTimes << std::endl;
-		std::cout << "The mempool is deleted." << std::endl;
 	}
 
 	template <size_t objSize>

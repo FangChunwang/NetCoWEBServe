@@ -3,6 +3,11 @@
 
 using namespace netco;
 
+/**
+ * @brief 按照平均分配原则来分配协程任务,主从模式
+ *
+ * @return Processor*
+ */
 Processor *ProcessorSelector::next()
 {
 	int n = static_cast<int>(processors_.size());

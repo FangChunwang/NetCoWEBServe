@@ -23,7 +23,11 @@ namespace netco
 		PRO_STOPPING,
 		PRO_STOPPED
 	};
-
+	enum roleOfProcessor
+	{
+		MASTER = 0,
+		SLAVE
+	};
 	enum newCoAddingStatus
 	{
 		NEWCO_ADDING = 0,
@@ -76,6 +80,8 @@ namespace netco
 		TimeWheel *getTimeWheel() { return m_timeWheel; }
 		void refresh(TimeWheel::TcpConnectionSlot::ptr ptrTemp);
 
+		roleOfProcessor getRoleOfProcessor() { return role; }
+
 	private:
 		// 恢复运行一个协程
 		void resume(Coroutine *);
@@ -124,5 +130,7 @@ namespace netco
 		Context mainCtx_;
 
 		TimeWheel *m_timeWheel;
+
+		roleOfProcessor role;
 	};
 }

@@ -79,12 +79,6 @@ namespace netco
         void process(int cfd);
         bool read_once(int fd);
         bool write(int cfd);
-        sockaddr_in *get_address()
-        {
-            return &m_address;
-        }
-        int timer_flag;
-        int improv;
         bool over_http = 0;
 
     private:
@@ -122,8 +116,6 @@ namespace netco
         int m_state; // 读为0, 写为1
 
     private:
-        int m_sockfd;
-        sockaddr_in m_address;
         char m_read_buf[READ_BUFFER_SIZE];
         long m_read_idx;
         long m_checked_idx;
@@ -145,15 +137,9 @@ namespace netco
         struct stat m_file_stat; // 保存请求文件的文件属性
         struct iovec m_iv[2];
         int m_iv_count;
-        int cgi;             // 是否启用的POST
         char *m_string;      // 存储请求头数据
         int bytes_to_send;   // 还剩下多少数据没有发送
         int bytes_have_send; // 已经发送了多少数据
-        char *doc_root;
-
-        std::map<std::string, std::string> m_users;
-        int m_TRIGMode;
-        int m_close_log;
     };
 }
 #endif
