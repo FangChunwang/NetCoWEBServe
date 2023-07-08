@@ -1,28 +1,28 @@
 #include "../include/netco_api.h"
+using namespace netco;
+// void netco::co_go(std::function<void()> &&func, size_t stackSize, int tid)
+// {
+// 	if (tid < 0)
+// 	{
+// 		netco::Scheduler::getScheduler()->createNewCo(std::move(func), stackSize);
+// 	}
+// 	else
+// 	{
+// 		tid %= netco::Scheduler::getScheduler()->getProCnt();
+// 		netco::Scheduler::getScheduler()->getProcessor(tid)->goNewCo(std::move(func), stackSize);
+// 	}
+// }
 
-void netco::co_go(std::function<void()> &&func, size_t stackSize, int tid)
+void netco::co_go(std::function<void()> func, Socket *socket, size_t stackSize, int tid)
 {
 	if (tid < 0)
 	{
-		netco::Scheduler::getScheduler()->createNewCo(std::move(func), stackSize);
+		netco::Scheduler::getScheduler()->createNewCo(func, socket, stackSize);
 	}
 	else
 	{
 		tid %= netco::Scheduler::getScheduler()->getProCnt();
-		netco::Scheduler::getScheduler()->getProcessor(tid)->goNewCo(std::move(func), stackSize);
-	}
-}
-
-void netco::co_go(std::function<void()> &func, size_t stackSize, int tid)
-{
-	if (tid < 0)
-	{
-		netco::Scheduler::getScheduler()->createNewCo(func, stackSize);
-	}
-	else
-	{
-		tid %= netco::Scheduler::getScheduler()->getProCnt();
-		netco::Scheduler::getScheduler()->getProcessor(tid)->goNewCo(func, stackSize);
+		netco::Scheduler::getScheduler()->getProcessor(tid)->goNewCo(func, socket, stackSize);
 	}
 }
 

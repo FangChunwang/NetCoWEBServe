@@ -16,6 +16,7 @@ extern __thread int threadIdx;
 
 namespace netco
 {
+	class Socket;
 	enum processerStatus
 	{
 		PRO_RUNNING = 0,
@@ -38,8 +39,8 @@ namespace netco
 		DISALLOW_COPY_MOVE_AND_ASSIGN(Processor);
 
 		// 运行一个新的协程
-		void goNewCo(std::function<void()> &&func, size_t stackSize);
-		void goNewCo(std::function<void()> &func, size_t stackSize);
+		void goNewCo(std::function<void()> &&func, Socket *socket, size_t stackSize);
+		void goNewCo(std::function<void()> &func, Socket *socket, size_t stackSize);
 		// void goNewCoAfterTime(std::function<void()> &func, size_t stackSize, Time time);
 
 		void yield();
@@ -70,12 +71,17 @@ namespace netco
 
 		void goCoBatch(std::vector<Coroutine *> &cos);
 
+		void registerToTimeWheel();
+
+		TimeWheel *getTimeWheel() { return m_timeWheel; }
+
 	private:
 		// 恢复运行一个协程
 		void resume(Coroutine *);
 
 		inline void wakeUpEpoller();
 
+	private:
 		// 处理器标识
 		int tid_;
 
@@ -116,6 +122,6 @@ namespace netco
 
 		Context mainCtx_;
 
-		TimeWheel m_timeWheel;
+		TimeWheel *m_timeWheel;
 	};
 }

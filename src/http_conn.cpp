@@ -173,8 +173,6 @@ bool http_conn::read_once(int fd)
         // printf("开始读取数据\r\n");
         //  bytes_read = recv(m_sockfd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx, 0);
         bytes_read = ::read(fd, m_read_buf + m_read_idx, READ_BUFFER_SIZE - m_read_idx);
-        if (fd == 9)
-            printf("我成功读取到了%d个字节\r\n", bytes_read);
         // perror("error:");
         if (bytes_read > 0) // 成功读到数据
         {

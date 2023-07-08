@@ -7,6 +7,7 @@ namespace netco
 {
 
 	class Processor;
+	class Coroutine;
 	class Context
 	{
 	public:
@@ -26,7 +27,7 @@ namespace netco
 		Context &operator=(const Context &otherCtx) = delete;
 
 		// 设置上下文环境
-		void makeContext(void (*func)(), Processor *, Context *);
+		void makeContext(void (*func)(), Processor *, Coroutine *co, Context *);
 
 		void makeCurContext();
 

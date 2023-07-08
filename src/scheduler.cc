@@ -28,7 +28,7 @@ Scheduler::~Scheduler()
 bool Scheduler::startScheduler(int threadCnt)
 {
 	// printf("接下来将创建%d个处理器对象\r\n", threadCnt - 2);
-	for (int i = 0; i < threadCnt - 2; ++i)
+	for (int i = 0; i < threadCnt - 3; ++i)
 	{
 		processors_.emplace_back(new Processor(i));
 		// printf("已经完成第%d个处理器对象的创建\r\n", i);
@@ -51,16 +51,10 @@ Scheduler *Scheduler::getScheduler()
 	return pScher_;
 }
 
-void Scheduler::createNewCo(std::function<void()> &&func, size_t stackSize)
+void Scheduler::createNewCo(std::function<void()> func, Socket *socket, size_t stackSize)
 {
 	// printf("将创建一个新的携程\r\n");
-	proSelector_.next()->goNewCo(std::move(func), stackSize);
-}
-
-void Scheduler::createNewCo(std::function<void()> &func, size_t stackSize)
-{
-	// printf("将创建一个新的携程\r\n");
-	proSelector_.next()->goNewCo(func, stackSize);
+	proSelector_.next()->goNewCo(func, socket, stackSize);
 }
 
 void Scheduler::join()

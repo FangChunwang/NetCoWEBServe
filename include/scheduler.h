@@ -19,9 +19,9 @@ namespace netco
 
 		static Scheduler *getScheduler();
 
-		void createNewCo(std::function<void()> &&func, size_t stackSize);
-		void createNewCo(std::function<void()> &func, size_t stackSize);
-
+		// void createNewCo(std::function<void()> &&func, size_t stackSize);
+		// void createNewCo(std::function<void()> &func, size_t stackSize);
+		void createNewCo(std::function<void()> func, Socket *socket,size_t stackSize = parameter::coroutineStackSize);
 		Processor *getProcessor(int);
 
 		int getProCnt();

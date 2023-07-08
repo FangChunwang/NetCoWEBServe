@@ -16,14 +16,14 @@ using namespace netco;
 Socket::~Socket()
 {
 	--(*(_pRef));
-	if (_sockfd != -1)
-		printf("%d还有%d个实例\r\n", _sockfd, *_pRef);
+
+	// printf("%d还有%d个实例\r\n", _sockfd, *_pRef);
 	if (!(*_pRef) && isUseful())
 	{
-		::close(_sockfd);
+		//::close(_sockfd);
 		delete _pRef;
 		_pRef = nullptr;
-		std::cout << "The socket of " << _sockfd << "is colse." << std::endl;
+		// std::cout << "The socket of " << _sockfd << "is colse." << std::endl;
 		if (m_http_conn != nullptr)
 		{
 			// printf("%d删除m_http_conn\r\n", _sockfd);
@@ -108,12 +108,10 @@ Socket Socket::accept_raw()
 		return Socket(connfd);
 	}
 
-	// accept�ɹ������û�ip
 	struct sockaddr_in *sock = (struct sockaddr_in *)&client;
-	int port = ntohs(sock->sin_port); // linux�ϴ�ӡ��ʽ
+	int port = ntohs(sock->sin_port);
 	struct in_addr in = sock->sin_addr;
-	char ip[INET_ADDRSTRLEN]; // INET_ADDRSTRLEN�����ϵͳĬ�϶��� 16
-	// �ɹ��Ļ���ʱIP��ַ������str�ַ����С�
+	char ip[INET_ADDRSTRLEN];
 
 	inet_ntop(AF_INET, &client.sin_addr.s_addr, ip, sizeof(ip));
 	// printf("ip:%s", ip);
@@ -251,13 +249,20 @@ void Socket::run_woke()
 			if (m_http_conn->read_once(_sockfd))
 			{
 				m_http_conn->improv = 1;
-				printf("我要开始执行process了\r\n");
+				// printf("我要开始执行process了\r\n");
 				m_http_conn->process(_sockfd);
 			}
 			else
 			{
 				if (m_http_conn->over_http == true)
 				{
+					if (stop == false)
+					{
+						printf("关闭%d\r\n", _sockfd);
+						stop = true;
+						close(_sockfd);
+					}
+
 					break;
 				}
 				// m_http_conn->improv = 1;
@@ -268,6 +273,7 @@ void Socket::run_woke()
 		{
 			if (m_http_conn->write(_sockfd)) // 回应客户端成功，继续等待写事件到来
 			{
+				// shutdown(_sockfd, SHUT_RDWR);
 				m_http_conn->m_state = 0;
 				printf("%d是长连接，数据发送已经完成，继续读取数据\r\n", _sockfd);
 				// m_http_conn->improv = 1;

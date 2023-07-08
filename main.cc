@@ -1,16 +1,19 @@
 #include <iostream>
 #include <sys/sysinfo.h>
+#include <memory>
 
 #include "./include/processor.h"
 #include "./include/netco_api.h"
 #include "./include/socket.h"
 #include "./include/mutex.h"
 #include "./include/http_conn.h"
+
 using namespace netco;
 
 // netco http response with one acceptor test
 void single_acceptor_server_test()
 {
+
 	netco::co_go(
 		[]
 		{
@@ -32,24 +35,27 @@ void single_acceptor_server_test()
 			{
 				printf("创建套结字失败\r\n");
 			}
-			// printf("等待新的连接到来\r\n");
+
 			while (1)
 			{
 				netco::Socket *conn = new netco::Socket(listener.accept());
-				printf("新建立的连接的文字描述符是%d: ", conn->fd());
+				printf("新建立的连接的文字描述符是%d: \r\n", conn->fd());
 				conn->setTcpNoDelay(true);
-				// 这个地方应该调用http对象的处理函数
+
 				netco::co_go(
 					[conn]
 					{
+						// printf("start...\r\n");
 						conn->run_woke();
 						if (conn->getRef() != nullptr)
 						{
 							delete conn;
 						}
-					});
+					},
+					conn);
 			}
-		});
+		},
+		nullptr);
 }
 
 int main(int argc, const char *argv[])
@@ -62,13 +68,10 @@ int main(int argc, const char *argv[])
 
 	// 修改当前工作目录
 	int ret = chdir(argv[1]);
-	// netco::RWMutex mu;
-	// mutex_test(mu);
-	std::cout << "start..." << std::endl;
+
 	single_acceptor_server_test();
-	// multi_acceptor_server_test();
-	// client_test();
+
 	netco::sche_join();
-	std::cout << "end" << std::endl;
+
 	return 0;
 }

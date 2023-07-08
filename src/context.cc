@@ -1,5 +1,6 @@
 #include "../include/context.h"
 #include "../include/parameter.h"
+#include "../include/coroutine.h"
 #include <stdlib.h>
 #include <cstdio>
 
@@ -18,7 +19,7 @@ Context::~Context()
 	}
 }
 
-void Context::makeContext(void (*func)(), Processor *pP, Context *pLink)
+void Context::makeContext(void (*func)(), Processor *pP, Coroutine *co, Context *pLink)
 {
 	if (nullptr == pStack_)
 	{
@@ -28,7 +29,7 @@ void Context::makeContext(void (*func)(), Processor *pP, Context *pLink)
 	ctx_.uc_stack.ss_sp = pStack_;
 	ctx_.uc_stack.ss_size = parameter::coroutineStackSize;
 	ctx_.uc_link = pLink->getUCtx();
-	makecontext(&ctx_, func, 1, pP);
+	makecontext(&ctx_, func, 2, pP, co);
 }
 
 void Context::makeCurContext()

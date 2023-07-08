@@ -1,8 +1,10 @@
 #pragma once
 #include <memory>
 #include <functional>
-
+#include <sys/socket.h>
+#include <cstdio>
 #include "spinlock.h"
+#include "socket.h"
 
 namespace netco
 {
@@ -15,21 +17,21 @@ namespace netco
         typedef std::weak_ptr<T> weakPtr;
         typedef std::shared_ptr<T> sharedPtr;
 
-        AbstractSlot(weakPtr ptr, std::function<void(sharedPtr)> cb) : m_weak_ptr(ptr), m_cb(cb)
+        AbstractSlot(T *socket) : m_socket(socket)
         {
         }
         ~AbstractSlot()
         {
-            sharedPtr ptr = m_weak_ptr.lock();
-            if (ptr)
+            if (m_socket != nullptr)
             {
-                m_cb(ptr);
+                printf("调用shutdown函数\r\n");
+                shutdown(m_socket->fd(), SHUT_RDWR);
+                printf("调用shutdown函数成功\r\n");
             }
         }
 
     private:
-        weakPtr m_weak_ptr;
-        std::function<void(sharedPtr)> m_cb;
+        T *m_socket;
         Spinlock spinLock;
     };
 }

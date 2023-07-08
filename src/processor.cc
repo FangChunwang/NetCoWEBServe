@@ -18,7 +18,7 @@ __thread int threadIdx = -1;
  */
 Processor::Processor(int tid)
 	: tid_(tid), status_(PRO_STOPPED), pLoop_(nullptr), runningNewQue_(0),
-	 pCurCoroutine_(nullptr), mainCtx_(0), m_timeWheel(6, 10000)
+	  pCurCoroutine_(nullptr), mainCtx_(0), m_timeWheel(new TimeWheel(6, 1000))
 {
 	mainCtx_.makeCurContext();
 }
@@ -40,6 +40,10 @@ Processor::~Processor()
 	for (auto co : coSet_)
 	{
 		delete co;
+	}
+	if (m_timeWheel != nullptr)
+	{
+		delete m_timeWheel;
 	}
 }
 
@@ -111,14 +115,14 @@ bool Processor::loop()
 	{
 		while (true)
 		{
-			printf("开始运行时间轮的loopfunc\r\n");
-			m_timeWheel.loopFunc();
-			printf("设置在10s后开始运行时间轮\r\n");
-			wait(Time(this->m_timeWheel.getInterval()));
+			// printf("开始运行时间轮的loopfunc\r\n");
+			m_timeWheel->loopFunc();
+			printf("时间轮转动一次\r\n");
+			wait(Time(this->m_timeWheel->getInterval()));
 		}
 	};
 	// 时间轮的初始化在处理器创建时已经完成
-	goNewCo(timeWheelLoop, parameter::coroutineStackSize);
+	goNewCo(timeWheelLoop, nullptr, parameter::coroutineStackSize);
 
 	pLoop_ = new std::thread(
 		[this]
@@ -219,7 +223,7 @@ void Processor::wakeUpEpoller()
  * 该函数会从协程中创建一个协程对象
  * 创建了一个协程也就意味着有一个新的TCP连接
  */
-void Processor::goNewCo(std::function<void()> &&coFunc, size_t stackSize)
+void Processor::goNewCo(std::function<void()> &&coFunc, Socket *socket, size_t stackSize)
 {
 	// Coroutine* pCo = new Coroutine(this, stackSize, std::move(coFunc));
 	printf("处理器%d有%ld个连接\r\n", tid_, getCoCnt() + 1);
@@ -227,20 +231,20 @@ void Processor::goNewCo(std::function<void()> &&coFunc, size_t stackSize)
 
 	{
 		SpinlockGuard lock(coPoolLock_);
-		pCo = coPool_.new_obj(this, stackSize, std::move(coFunc));
+		pCo = coPool_.new_obj(this, socket, stackSize, std::move(coFunc));
 	}
 
 	goCo(pCo);
 }
 
-void Processor::goNewCo(std::function<void()> &coFunc, size_t stackSize)
+void Processor::goNewCo(std::function<void()> &coFunc, Socket *socket, size_t stackSize)
 {
 	// Coroutine* pCo = new Coroutine(this, stackSize, coFunc);
 	Coroutine *pCo = nullptr;
 
 	{
 		SpinlockGuard lock(coPoolLock_);
-		pCo = coPool_.new_obj(this, stackSize, coFunc);
+		pCo = coPool_.new_obj(this, socket, stackSize, coFunc);
 	}
 
 	goCo(pCo);

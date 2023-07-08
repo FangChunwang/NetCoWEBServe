@@ -1,12 +1,13 @@
 #pragma once
 #include "utils.h"
 #include "parameter.h"
-#include "../include/http_conn.h"
-
+#include "http_conn.h"
+#include "abstractSlot.h"
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <iostream>
+#include <memory>
 
 struct tcp_info;
 namespace netco
@@ -52,91 +53,69 @@ namespace netco
 		}
 
 		Socket &operator=(const Socket &otherSock) = delete;
-
 		~Socket();
-
-		// ���ص�ǰSocket��fd
 		int fd() const { return _sockfd; }
 
-		// ���ص�ǰSocket�Ƿ����
 		bool isUseful() { return _sockfd >= 0; }
 
-		// ��ip��port����ǰSocket
 		int bind(int port);
 
-		// ��ʼ������ǰSocket
 		int listen();
 
-		// ����һ�����ӣ�����һ�������ӵ�Socket
 		Socket accept();
 
-		// ��socket�ж�����
 		ssize_t read(void *buf, size_t count);
 
-		// ipʾ����"127.0.0.1"
 		void connect(const char *ip, int port);
 
-		// ��socket��д����
 		ssize_t send(const void *buf, size_t count);
 
-		// ��ȡ��ǰ�׽��ֵ�Ŀ��ip
 		std::string ip() { return _ip; }
 
-		// ��ȡ��ǰ�׽��ֵ�Ŀ��port
 		int port() { return _port; }
 
-		// ��ȡ�׽��ֵ�ѡ��,�ɹ��򷵻�true����֮������false
 		bool getSocketOpt(struct tcp_info *) const;
 
-		// ��ȡ�׽��ֵ�ѡ����ַ���,�ɹ��򷵻�true����֮������false
 		bool getSocketOptString(char *buf, int len) const;
 
-		// ��ȡ�׽��ֵ�ѡ����ַ���
 		std::string getSocketOptString() const;
 
-		// �ر��׽��ֵ�д����
 		int shutdownWrite();
 
-		// �����Ƿ���Nagle�㷨������Ҫ��������ݰ�����������ʱ���ܻ�����
 		int setTcpNoDelay(bool on);
 
-		// �����Ƿ��ַ����
 		int setReuseAddr(bool on);
 
-		// �����Ƿ�˿�����
 		int setReusePort(bool on);
 
-		// �����Ƿ�ʹ���������
 		int setKeepAlive(bool on);
 
-		// ����socketΪ��������
 		int setNonBolckSocket();
 
 		int *getRef() { return _pRef; }
 
-		// ����socketΪ������
 		int setBlockSocket();
 
 		// void SetNoSigPipe();
 		void run_woke();
+		void add() { ++(*_pRef); }
+
+		void setClose() { stop = true; }
+		bool getStatus() { return stop; }
+
 		http_conn *getHttpConnect() { return m_http_conn; }
 
 	private:
-		// ����һ�����ӣ�����һ�������ӵ�Socket
 		Socket accept_raw();
 		// fd
 		int _sockfd;
-
-		// ���ü���
 		int *_pRef;
-
-		// �˿ں�
 		int _port;
 
 		// ip
 		std::string _ip;
 
 		http_conn *m_http_conn;
+		bool stop{false};
 	};
-
 }

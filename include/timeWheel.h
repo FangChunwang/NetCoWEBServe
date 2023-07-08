@@ -19,9 +19,11 @@ namespace netco
         void fresh(TcpConnectionSlot::ptr slot);
         void loopFunc();
         int getInterval() { return m_interval; }
+
     private:
         int bucket_count;
         int m_interval; // 时间间隔
         std::queue<std::vector<TcpConnectionSlot::ptr>> m_wheel;
+        // std::queue<std::vector<Socket>> m_wheel;
     };
 }

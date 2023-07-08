@@ -15,12 +15,13 @@ namespace netco
 	};
 
 	class Processor;
+	class Socket;
 
 	class Coroutine
 	{
 	public:
-		Coroutine(Processor *, size_t stackSize, std::function<void()> &&);
-		Coroutine(Processor *, size_t stackSize, std::function<void()> &);
+		Coroutine(Processor *, Socket *, size_t stackSize, std::function<void()> &&);
+		Coroutine(Processor *, Socket *, size_t stackSize, std::function<void()> &);
 		~Coroutine();
 
 		DISALLOW_COPY_MOVE_AND_ASSIGN(Coroutine);
@@ -29,17 +30,20 @@ namespace netco
 
 		void yield();
 
-		Processor *getMyProcessor() { return pMyProcessor_; }
+		Processor *getMyProcessor() { return m_pMyProcessor; }
 
-		inline void startFunc() { coFunc_(); };
+		void startFunc() { coFunc_(); };
 
 		// 返回上下文环境
-		inline Context *getCtx() { return &ctx_; }
+		Context *getCtx() { return &ctx_; }
+
+		Socket *getSocket() { return clientSocket; }
 
 	private:
 		std::function<void()> coFunc_;
 
-		Processor *pMyProcessor_;
+		Processor *m_pMyProcessor;
+		Socket *clientSocket;
 
 		int status_;
 
